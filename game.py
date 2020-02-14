@@ -9,6 +9,7 @@ SPRITE_SCALING_PLAYER = 0.5
 SPRITE_SCALING_COIN = .25
 COIN_COUNT = 50
 Player_Movement_Speed = 5
+TILE_SCALING = 0.5
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -33,6 +34,7 @@ class MyGame(arcade.Window):
         # Variables that will hold sprite lists
         self.player_list = None
         self.coin_list = None
+        self.wall_list = None
 
         # Set up the player info
         self.player_sprite = None
@@ -40,6 +42,8 @@ class MyGame(arcade.Window):
 
         # Don't show the mouse cursor
         self.set_mouse_visible(False)
+
+        self.physics_engine = None
 
         arcade.set_background_color(arcade.color.AMAZON)
 
@@ -49,17 +53,19 @@ class MyGame(arcade.Window):
         # Sprite lists
         self.player_list = arcade.SpriteList()
         self.coin_list = arcade.SpriteList()
+        self.wall_list = arcade.SpriteList()
 
         # Score
         self.score = 0
 
         # Set up the player
         # Character image from kenney.nl
-        self.player_sprite = arcade.Sprite(":resources:images/animated_characters/female_person/femalePerson_idle.png",
+        self.player_sprite = arcade.Sprite("Idle (1).png",
                                            SPRITE_SCALING_PLAYER)
         self.player_sprite.center_x = 50
         self.player_sprite.center_y = 50
         self.player_list.append(self.player_sprite)
+
 
         # Create the coins
         for i in range(COIN_COUNT):
@@ -77,7 +83,9 @@ class MyGame(arcade.Window):
             self.coin_list.append(coin)
 
         #create physics engine
-        self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite)
+        self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
+
+        #set up the walls
 
     def on_draw(self):
         """ Draw everything """
@@ -90,16 +98,28 @@ class MyGame(arcade.Window):
         output = f"Score: {self.score}"
         arcade.draw_text(output, 10, 20, arcade.color.WHITE, 14)
 
-    def on_key_press(self, key):
+    def on_key_press(self, key, modifiers):
         """ Take Some User Input From Keyboard """
-        if key == arcade.key.UP or arcade.key.W:
+        if key == arcade.key.UP or key == arcade.key.W:
             self.player_sprite.change_y = Player_Movement_Speed
-        elif key == arcade.key.DOWN or arcade.key.S:
+        elif key == arcade.key.DOWN or key == arcade.key.S:
             self.player_sprite.change_y = -Player_Movement_Speed
-        elif key == arcade.key.LEFT or arcade.key.A:
+        elif key == arcade.key.LEFT or key == arcade.key.A:
             self.player_sprite.change_x = -Player_Movement_Speed
-        elif key == arcade.key.RIGHT or arcade.key.D:
+        elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.player_sprite.change_x = Player_Movement_Speed
+
+    def on_key_release(self, key, modifiers):
+        """Called when the user releases a key. """
+
+        if key == arcade.key.UP or key == arcade.key.W:
+            self.player_sprite.change_y = 0
+        elif key == arcade.key.DOWN or key == arcade.key.S:
+            self.player_sprite.change_y = 0
+        elif key == arcade.key.LEFT or key == arcade.key.A:
+            self.player_sprite.change_x = 0
+        elif key == arcade.key.RIGHT or key == arcade.key.D:
+            self.player_sprite.change_x = 0
 
     def on_update(self, delta_time):
         """ Movement and game logic """
@@ -107,6 +127,7 @@ class MyGame(arcade.Window):
         # Call update on all sprites (The sprites don't do much in this
         # example though.)
         self.coin_list.update()
+        self.physics_engine.update()
 
 
         # Generate a list of all sprites that collided with the player.
